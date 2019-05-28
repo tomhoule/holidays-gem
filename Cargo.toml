@@ -1,0 +1,12 @@
+[package]
+name = "holidays-gem"
+version = "0.1.0"
+authors = ["Tom Houlé <tom@tomhoule.com>"]
+edition = "2018"
+description = "Placeholder to reserve the crate name. More here soon."
+repository = "https://github.com/tomhoule/holidays-gem"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
