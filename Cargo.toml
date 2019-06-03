@@ -12,3 +12,4 @@ license = "MIT"
 [dependencies]
 serde = { version = "1.0.91", features = ["derive"] }
 serde_yaml = "0.8.9"
+chrono = "0.4.6"
