@@ -1,14 +1,15 @@
+use chrono::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct CountryFile {
     pub months: Months,
     #[serde(default)]
     pub tests: Vec<Test>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Months {
     #[serde(rename = "0")]
     #[serde(default)]
@@ -52,34 +53,45 @@ pub struct Months {
 }
 
 impl Months {
-    fn lookup_date(&self, date: &chrono::NaiveDate) -> Option<&Holiday> {
-        self.january
-            .iter()
-            .chain(&self.february)
-            .chain(&self.march)
-            .chain(&self.april)
-            .chain(&self.may)
-            .chain(&self.june)
-            .chain(&self.july)
-            .chain(&self.august)
-            .chain(&self.september)
-            .chain(&self.october)
-            .chain(&self.november)
-            .chain(&self.december)
-            .find(|holiday| holiday.date)
+    pub fn holidays_for_month(&self, month: u32) -> &[Holiday] {
+        match month {
+            1 => &self.january,
+            2 => &self.february,
+            3 => &self.march,
+            4 => &self.april,
+            5 => &self.may,
+            6 => &self.june,
+            7 => &self.july,
+            8 => &self.august,
+            9 => &self.september,
+            10 => &self.october,
+            11 => &self.november,
+            12 => &self.december,
+            _ => &[],
+        }
+    }
+
+    pub fn lookup_date(&self, date: &chrono::NaiveDate) -> Option<&Holiday> {
+        let month: u32 = date.month();
+        let day = date.day();
+        let holidays = self.holidays_for_month(month);
+
+        holidays.iter().find(|holiday| holiday.mday == Some(day))
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Holiday {
     pub name: String,
     pub regions: Vec<String>,
     /// Day of the month.
-    pub mday: Option<u8>,
+    pub mday: Option<u32>,
+    /// Computed holiday
+    pub function: Option<String>,
 }
 
 /// https://github.com/holidays/definitions/blob/master/doc/SYNTAX.md#dates-defined-by-a-week-number-eg-first-monday-of-a-month
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[repr(i8)]
 pub enum Week {
     FirstWeek = 1,
@@ -90,7 +102,7 @@ pub enum Week {
 }
 
 /// https://github.com/holidays/definitions/blob/master/doc/SYNTAX.md#dates-defined-by-a-week-number-eg-first-monday-of-a-month
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[repr(u8)]
 pub enum WeekDay {
     Sunday = 0,
@@ -102,7 +114,7 @@ pub enum WeekDay {
     Saturday = 6,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ComputedHoliday {
     pub name: String,
     pub regions: Vec<String>,
@@ -112,26 +124,26 @@ pub struct ComputedHoliday {
     pub _type: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Test {
     pub given: Given,
     pub expect: Expectation,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Expectation {
     pub name: Option<String>,
     pub holiday: Option<bool>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum OneOrList<T> {
     One(T),
     List(Vec<T>),
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Given {
     pub date: OneOrList<String>,
     pub regions: Vec<String>,
@@ -139,64 +151,11 @@ pub struct Given {
 }
 
 /// The shape of the data inside the index.yaml file.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Index {
     pub defs: HashMap<String, Vec<std::path::PathBuf>>,
 }
 
 pub struct Holidays {
-    definitions: CountryFile,
-}
-
-impl Holidays {
-    pub fn default() -> Holidays {
-        unimplemented!()
-    }
-
-    pub fn with_custom_definitions(definitions: CountryFile) -> Holidays {
-        Holidays { definitions }
-    }
-
-    pub fn at_date<'a>(&'a self, date: &'a chrono::NaiveDate) -> QueryBuilder<'a> {
-        QueryBuilder {
-            date,
-            holidays: self,
-            country_code: None,
-
-            region_code: None,
-        }
-    }
-}
-
-// TODO: RangeQueryBuilder
-// TODO: country codes
-pub struct QueryBuilder<'a> {
-    date: &'a chrono::NaiveDate,
-    holidays: &'a Holidays,
-    region_code: Option<&'a str>,
-    country_code: Option<&'a str>,
-}
-
-impl<'a> QueryBuilder<'a> {
-    fn country_code(self, country_code: &'a str) -> Self {
-        QueryBuilder {
-            country_code: Some(country_code),
-            ..self
-        }
-    }
-
-    fn region_code(self, region_code: &'a str) -> Self {
-        QueryBuilder {
-            region_code: Some(region_code),
-            ..self
-        }
-    }
-
-    fn query(self) -> Option<&'a str> {
-        self.holidays
-            .definitions
-            .months
-            .lookup_date(&self.date)
-            .map(|holiday| holiday.name.as_str())
-    }
+    definitions: HashMap<String, CountryFile>,
 }
