@@ -1,15 +1,15 @@
 use chrono::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CountryFile {
     pub months: Months,
     #[serde(default)]
     pub tests: Vec<Test>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Months {
     #[serde(rename = "0")]
     #[serde(default)]
@@ -80,7 +80,7 @@ impl Months {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Holiday {
     pub name: String,
     pub regions: Vec<String>,
@@ -91,7 +91,7 @@ pub struct Holiday {
 }
 
 /// https://github.com/holidays/definitions/blob/master/doc/SYNTAX.md#dates-defined-by-a-week-number-eg-first-monday-of-a-month
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[repr(i8)]
 pub enum Week {
     FirstWeek = 1,
@@ -102,7 +102,7 @@ pub enum Week {
 }
 
 /// https://github.com/holidays/definitions/blob/master/doc/SYNTAX.md#dates-defined-by-a-week-number-eg-first-monday-of-a-month
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[repr(u8)]
 pub enum WeekDay {
     Sunday = 0,
@@ -114,7 +114,7 @@ pub enum WeekDay {
     Saturday = 6,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ComputedHoliday {
     pub name: String,
     pub regions: Vec<String>,
@@ -124,26 +124,26 @@ pub struct ComputedHoliday {
     pub _type: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Test {
     pub given: Given,
     pub expect: Expectation,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Expectation {
     pub name: Option<String>,
     pub holiday: Option<bool>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum OneOrList<T> {
     One(T),
     List(Vec<T>),
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Given {
     pub date: OneOrList<String>,
     pub regions: Vec<String>,
@@ -151,7 +151,7 @@ pub struct Given {
 }
 
 /// The shape of the data inside the index.yaml file.
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Index {
     pub defs: HashMap<String, Vec<std::path::PathBuf>>,
 }
